@@ -3,6 +3,8 @@ on:
   push:
     branches:
       - main  # Change this to your default branch
+    paths:
+      - 'test-chart-1/**'
   workflow_dispatch:
   
 permissions: write-all
@@ -21,14 +23,14 @@ jobs:
 
       - name: Increase Chart Version
         run: |
-          VERSION_LINE=$(grep 'version:' test-chart/Chart.yaml)
+          VERSION_LINE=$(grep 'version:' test-chart-1/Chart.yaml)
           CURRENT_VERSION=$(echo $VERSION_LINE | cut -d ' ' -f 2)
           MAJOR_VERSION=$(echo $CURRENT_VERSION | cut -d '.' -f 1)
           MINOR_VERSION=$(echo $CURRENT_VERSION | cut -d '.' -f 2)
           PATCH_VERSION=$(echo $CURRENT_VERSION | cut -d '.' -f 3)
           NEW_PATCH_VERSION=$((PATCH_VERSION + 1))
           NEW_VERSION="$MAJOR_VERSION.$MINOR_VERSION.$NEW_PATCH_VERSION"
-          sed -i "s/$CURRENT_VERSION/$NEW_VERSION/" test-chart/Chart.yaml
+          sed -i "s/$CURRENT_VERSION/$NEW_VERSION/" test-chart-1/Chart.yaml
 
       - name: Commit changes
         run: |
