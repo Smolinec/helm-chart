@@ -32,12 +32,13 @@ jobs:
           helm repo index . 
 
       - name: Commit Index
-        run: |
-          git add index.yaml
-          git commit -m "Update index.yaml"
-          
-      - name: Push changes
-        uses: ad-m/github-push-action@master
+        uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          github_token: ${{ secrets.GH_PAT }}
-          branch: ${{ github.ref }}
+          commit_message: "Update index.yaml"
+          commit_options: "--no-verify --allow-empty"
+          commit_user_name: "GitHub Actions"
+          commit_user_email: "actions@github.com"
+          repository: "."
+          file_pattern: index.yaml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
