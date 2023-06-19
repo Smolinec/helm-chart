@@ -1,0 +1,64 @@
+name: Release Charts
+on:
+  push:
+    branches:
+      - main  # Change this to your default branch
+    paths:
+      - 'home-assistant/**'
+  workflow_dispatch:
+  
+permissions: write-all
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Increase Chart Version
+        run: |
+          VERSION_LINE=$(grep 'version:' home-assistant/Chart.yaml)
+          CURRENT_VERSION=$(echo $VERSION_LINE | cut -d ' ' -f 2)
+          MAJOR_VERSION=$(echo $CURRENT_VERSION | cut -d '.' -f 1)
+          MINOR_VERSION=$(echo $CURRENT_VERSION | cut -d '.' -f 2)
+          PATCH_VERSION=$(echo $CURRENT_VERSION | cut -d '.' -f 3)
+          NEW_PATCH_VERSION=$((PATCH_VERSION + 1))
+          NEW_VERSION="$MAJOR_VERSION.$MINOR_VERSION.$NEW_PATCH_VERSION"
+          sed -i "s/$CURRENT_VERSION/$NEW_VERSION/" home-assistant/Chart.yaml
+
+      - name: Commit changes
+        run: |
+          git commit -am "Increase Chart version"
+          git push
+
+      - name: Install Helm
+        uses: azure/setup-helm@v1
+
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1.0.0
+        with:
+          charts_dir: .  # Change this to your charts directory
+        env:
+          CR_TOKEN: "${{ secrets.GH_PAT }}"
+
+      - name: Generate Index
+        run: |
+          helm repo index . 
+
+      - name: Commit Index
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "Update index.yaml"
+          commit_options: "--no-verify --allow-empty"
+          commit_user_name: "GitHub Actions"
+          commit_user_email: "actions@github.com"
+          repository: "."
+          file_pattern: index.yaml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
