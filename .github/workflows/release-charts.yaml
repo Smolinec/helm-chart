@@ -27,7 +27,7 @@ jobs:
         with:
           charts_dir: .  # Change this to your charts directory
         env:
-          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          CR_TOKEN: "${{ secrets.GH_PAT }}"
 
       - name: Generate Index
         run: |
